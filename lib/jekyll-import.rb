@@ -1,12 +1,16 @@
-$:.unshift File.dirname(__FILE__) # For use/testing when no gem is installed
-require 'rubygems'
-require 'jekyll'
-require 'jekyll/commands/import'
-require 'colorator'
+# frozen_string_literal: true
 
-require 'jekyll-import/importer'
-require 'jekyll-import/importers'
-require 'jekyll-import/util'
+# For use/testing when no gem is installed
+$LOAD_PATH.unshift __dir__
+
+require "rubygems"
+require "jekyll"
+require "jekyll/commands/import"
+require "colorator"
+
+require "jekyll-import/importer"
+require "jekyll-import/importers"
+require "jekyll-import/util"
 
 module JekyllImport
   # Public: Add the subcommands for each importer

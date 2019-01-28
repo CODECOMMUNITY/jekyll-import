@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module JekyllImport
   module Importers
     class TextPattern < Importer
@@ -15,28 +17,29 @@ module JekyllImport
                      Status = '5'"
 
       def self.require_deps
-        JekyllImport.require_with_fallback(%w[
+        JekyllImport.require_with_fallback(%w(
           rubygems
           sequel
+          mysql2
           fileutils
           safe_yaml
-        ])
+        ))
       end
 
       def self.specify_options(c)
-        c.option 'dbname', '--dbname DB', 'Database name'
-        c.option 'user', '--user USER', 'Database user name'
-        c.option 'password', '--password PW', "Database user's password"
-        c.option 'host', '--host HOST', 'Database host name (default: "localhost")'
+        c.option "dbname",   "--dbname DB",   "Database name"
+        c.option "user",     "--user USER",   "Database user name"
+        c.option "password", "--password PW", "Database user's password"
+        c.option "host",     "--host HOST",   'Database host name (default: "localhost")'
       end
 
       def self.process(options)
-        dbname = options.fetch('dbname')
-        user   = options.fetch('user')
-        pass   = options.fetch('password', "")
-        host   = options.fetch('host', "localhost")
+        dbname = options.fetch("dbname")
+        user   = options.fetch("user")
+        pass   = options.fetch("password", "")
+        host   = options.fetch("host", "localhost")
 
-        db = Sequel.mysql(dbname, :user => user, :password => pass, :host => host, :encoding => 'utf8')
+        db = Sequel.mysql2(dbname, :user => user, :password => pass, :host => host, :encoding => "utf8")
 
         FileUtils.mkdir_p "_posts"
 
@@ -47,15 +50,15 @@ module JekyllImport
           date = post[:Posted]
           content = post[:Body]
 
-          name = [date.strftime("%Y-%m-%d"), slug].join('-') + ".textile"
+          name = [date.strftime("%Y-%m-%d"), slug].join("-") + ".textile"
 
           # Get the relevant fields as a hash, delete empty fields and convert
           # to YAML for the header.
           data = {
-             'layout' => 'post',
-             'title' => title.to_s,
-             'tags' => post[:Keywords].split(',')
-           }.delete_if { |k,v| v.nil? || v == ''}.to_yaml
+            "layout" => "post",
+            "title"  => title.to_s,
+            "tags"   => post[:Keywords].split(","),
+          }.delete_if { |_k, v| v.nil? || v == "" }.to_yaml
 
           # Write out the data and content to file.
           File.open("_posts/#{name}", "w") do |f|

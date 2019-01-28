@@ -1,22 +1,17 @@
 language: ruby
+sudo: false
+cache: bundler
 rvm:
-  - 2.2
-  - 2.1
-  - 2.0
-matrix:
-  include:
-    - # Ruby 1.9
-      rvm: 1.9
-      env: JEKYLL_VERSION=2.0
+  - 2.6
+  - 2.4
 env:
   global:
     - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
   matrix:
-    - JEKYLL_VERSION=3.0
-    - JEKYLL_VERSION=2.5
-cache: bundler
-sudo: false
+    - JEKYLL_VERSION=3.6
+before_install:
+- gem update --system
 before_script: bundle update
-script: ./script/cibuild
+script: script/cibuild
 notifications:
   email: false

@@ -1,110 +1,64 @@
+# frozen_string_literal: true
+
+require "jekyll-import/importers/drupal_common"
+
 module JekyllImport
   module Importers
     class Drupal7 < Importer
-      # Reads a MySQL database via Sequel and creates a post file for each story
-      # and blog node.
-      QUERY = "SELECT n.title, \
-                      fdb.body_value, \
-                      fdb.body_summary, \
-                      n.created, \
-                      n.status, \
-                      n.nid, \
-                      u.name \
-               FROM node AS n, \
-                    field_data_body AS fdb, \
-                    users AS u \
-               WHERE (%types%) \
-               AND n.nid = fdb.entity_id \
-               AND n.vid = fdb.revision_id
-               AND n.uid = u.uid"
+      include DrupalCommon
+      extend DrupalCommon::ClassMethods
 
-      def self.validate(options)
-        %w[dbname user].each do |option|
-          if options[option].nil?
-            abort "Missing mandatory option --#{option}."
-          end
-        end
-      end
-
-      def self.specify_options(c)
-        c.option 'dbname', '--dbname DB', 'Database name'
-        c.option 'user', '--user USER', 'Database user name'
-        c.option 'password', '--password PW', 'Database user\'s password (default: "")'
-        c.option 'host', '--host HOST', 'Database host name (default: "localhost")'
-        c.option 'prefix', '--prefix PREFIX', 'Table prefix name'
-        c.option 'types', '--types TYPE1[,TYPE2[,TYPE3...]]', Array, 'The Drupal content types to be imported.'
-      end
-
-      def self.require_deps
-        JekyllImport.require_with_fallback(%w[
-          rubygems
-          sequel
-          fileutils
-          safe_yaml
-        ])
-      end
-
-      def self.process(options)
-        dbname = options.fetch('dbname')
-        user   = options.fetch('user')
-        pass   = options.fetch('password', "")
-        host   = options.fetch('host', "localhost")
-        prefix = options.fetch('prefix', "")
-        types  = options.fetch('types', ['blog', 'story', 'article'])
-
-        db = Sequel.mysql(dbname, :user => user, :password => pass, :host => host, :encoding => 'utf8')
-
-        unless prefix.empty?
-          QUERY[" node "] = " " + prefix + "node "
-          QUERY[" field_data_body "] = " " + prefix + "field_data_body "
-          QUERY[" users "] = " " + prefix + "users "
-        end
-
+      def self.build_query(prefix, types, engine)
         types = types.join("' OR n.type = '")
-        QUERY[" WHERE (%types%) "] = " WHERE (n.type = '#{types}') "
+        types = "n.type = '#{types}'"
 
-        FileUtils.mkdir_p "_posts"
-        FileUtils.mkdir_p "_drafts"
-        FileUtils.mkdir_p "_layouts"
+        tag_group = if engine == "postgresql"
+                      <<POSTGRESQL
+            (SELECT STRING_AGG(td.name, '|')
+            FROM #{prefix}taxonomy_term_data td, #{prefix}taxonomy_index ti
+            WHERE ti.tid = td.tid AND ti.nid = n.nid) AS tags
+POSTGRESQL
+                    else
+                      <<SQL
+            (SELECT GROUP_CONCAT(td.name SEPARATOR '|')
+            FROM #{prefix}taxonomy_term_data td, #{prefix}taxonomy_index ti
+            WHERE ti.tid = td.tid AND ti.nid = n.nid) AS 'tags'
+SQL
+                    end
 
-        db[QUERY].each do |post|
-          # Get required fields and construct Jekyll compatible name
-          title = post[:title]
-          content = post[:body_value]
-          summary = post[:body_summary]
-          created = post[:created]
-          author = post[:name]
-          nid = post[:nid]
-          time = Time.at(created)
-          is_published = post[:status] == 1
-          dir = is_published ? "_posts" : "_drafts"
-          slug = title.strip.downcase.gsub(/(&|&amp;)/, ' and ').gsub(/[\s\.\/\\]/, '-').gsub(/[^\w-]/, '').gsub(/[-_]{2,}/, '-').gsub(/^[-_]/, '').gsub(/[-_]$/, '')
-          name = time.strftime("%Y-%m-%d-") + slug + '.md'
+        query = <<QUERY
+                SELECT n.nid,
+                       n.title,
+                       fdb.body_value,
+                       fdb.body_summary,
+                       n.created,
+                       n.status,
+                       n.type,
+                       #{tag_group}
+                FROM #{prefix}node AS n
+                LEFT JOIN #{prefix}field_data_body AS fdb
+                  ON fdb.entity_id = n.nid AND fdb.entity_type = 'node'
+                WHERE (#{types})
+QUERY
 
-          # Get the relevant fields as a hash, delete empty fields and convert
-          # to YAML for the header
-          data = {
-            'layout' => 'post',
-            'title' => title.strip.force_encoding("UTF-8"),
-            'author' => author,
-            'nid' => nid,
-            'created' => created,
-            'excerpt' => summary
-          }.delete_if { |k,v| v.nil? || v == ''}.to_yaml
+        query
+      end
 
-          # Write out the data and content to file
-          File.open("#{dir}/#{name}", "w") do |f|
-            f.puts data
-            f.puts "---"
-            f.puts content
-          end
+      def self.aliases_query(prefix)
+        "SELECT source, alias FROM #{prefix}url_alias WHERE source = ?"
+      end
 
-        end
+      def self.post_data(sql_post_data)
+        content = sql_post_data[:body_value].to_s
+        summary = sql_post_data[:body_summary].to_s
+        tags = (sql_post_data[:tags] || "").downcase.strip
 
-        # TODO: Make dirs & files for nodes of type 'page'
-          # Make refresh pages for these as well
+        data = {
+          "excerpt"    => summary,
+          "categories" => tags.split("|"),
+        }
 
-        # TODO: Make refresh dirs & files according to entries in url_alias table
+        [data, content]
       end
     end
   end

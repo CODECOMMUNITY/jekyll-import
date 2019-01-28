@@ -1,3 +1,146 @@
+## HEAD
+
+### Minor Enhancements
+
+  * Import Wordpress permalinks (#395)
+
+## 0.17.1 / 2018-12-23
+
+### Bug Fixes
+
+  * Replace URI.parse.open with OpenURI.open_uri (#389)
+
+## 0.17.0 / 2018-12-20
+
+### Bug Fixes
+
+  * Unfreeze strings in importers that modify literals (#381)
+  * Patch missing per_page bug in Tumblr importer (#383)
+
+### Minor Enhancements
+
+  * remove extra / if passed with --url (#378)
+  * Convert Tumblr content to Markdown when opted for (#384)
+  * Convert HTML to MD with ReverseMarkdown instead (#386)
+
+### Development Fixes
+
+  * Prettify JSON payloads in test_tumblr_importer (#385)
+
+## 0.16.0 / 2018-11-04
+
+### Development Fixes
+
+  * chore(deps): rubocop-jekyll 0.3 (#370)
+
+### Documentation
+
+  * docs: avoid error message (#374)
+
+### Minor Enhancements
+
+  * refactor: Roller improvements and tests (#371)
+
+## 0.15.0 / 2018-10-17
+
+### Minor Enhancements
+
+  * Add roller importer (#363)
+  * Allow additional options to RSS import (#307)
+
+### Bug Fixes
+
+  * Use mysql by default in Drupal importers. (#347)
+  * WordPress: add missing site prefix in user table (#343)
+  * Drupal: add option to configure port. Add missing prefix to taxonomy tables. (#349)
+  * Movable type: fix column name typo (#351)
+
+### Development Fixes
+
+  * Replace uninitialized constant with alternative (#358)
+  * chore(deps): fix gem build warnings (#361)
+  * Remove cyclic require of import command (#359)
+  * style: ignore Lint/Loop for tumblr (#360)
+  * style: inherit rubocop-jekyll's rules (#357)
+  * Refactor Tumblr Importer (#362)
+
+### Documentation
+
+  * Update Documentation for Contributing to project (#366)
+
+## 0.14.0 / 2018-02-03
+
+### Development Fixes
+
+  * Security: Fix alert on activesupport (#332)
+  * Test against Ruby 2.5 (#336)
+
+### Minor Enhancements
+
+  * Add support for Drupal 7 installations with PostgreSQL database (#331)
+
+## 0.13.0 / 2017-11-05
+
+### Minor Enhancements
+
+  * WordPress: add port options for mysql db connection (#311)
+  * Ghost: import drafts & pages, and fix issue with date extraction (#304)
+  * Add parent_id to wordpressdotcom importer (#301)
+  * RSS: add &#34;tag&#34; option to add a tag to all posts (#306)
+  * WordPressDotCom: import post passwords (#302)
+  * Joomla3: Use mysql2 instead of mysql (#309)
+  * Joomla: Add option to specify the MySQL port (#310)
+
+### Bug Fixes
+
+  * Drupal 7: Remove uneeded double quote in SQL query (#287)
+  * Drupal 7: Fixes SQL grouping error (#289)
+  * S9y: Add port to db options & pull out `entries.extended` field (#299)
+  * Blogger: replace special characters with hyphens in the post name (#280)
+  * WordPress: fix variable name for `more_anchor` (#305)
+  * WordPress: replace was backwards, broke end tags (#292)
+
+### Development Fixes
+
+  * Updating Ruby and Jekyll versions for testing (#290)
+  * Modernize Travis configuration (#317)
+  * Define path with __dir__ (#316)
+  * Appease Rubocop (#318)
+  * Stop testing against Jekyll 2.5 (#323)
+
+### Site Enhancements
+
+  * Corrected Joomla3 importer name and clarified "category" field (#286)
+  * Fixed style issues on HTTPS site (#296)
+  * Change broken link for "A great article" (#294)
+
+### Documentation
+
+  * Add the new port setting to the Wordpress importer docs (#312)
+
+## 0.12.0 / 2016-11-28
+
+  * Joomla: require the `mysql` gem (#197)
+  * Tumblr: improve compatibility with Jekyll 3 (#239)
+  * tumblr: only append to content if its truthy (#265)
+  * Add S9y database importer (#259)
+  * Add functionality for importing Blogger comments (#258)
+  * joomla: use & require mysql2 instead of mysql (#255)
+  * Tumblr: close conversation HTML tags in the right order (#266)
+  * Tumblr: Fixing double-read and off-by-one error (#253)
+  * Clean up the Drupal importers (#235)
+  * DrupalCommon: centralize defaults & use config for layouts dir (#267)
+  * Tumblr: save images in binary mode (#278)
+  * Tumblr: fix creation of rewrite rules (#283)
+
+### Development Fixes
+
+  * Fix Travis CI build (#273)
+
+### Site Enhancements
+
+  * Fix for misnamed Joomla3 module in docs (#271)
+
 ## 0.11.0 / 2016-06-27
 
 ### Bug Fixes

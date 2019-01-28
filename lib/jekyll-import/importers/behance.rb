@@ -1,26 +1,26 @@
+# frozen_string_literal: true
+
 module JekyllImport
   module Importers
     class Behance < Importer
       def self.require_deps
-        JekyllImport.require_with_fallback(%w[
+        JekyllImport.require_with_fallback(%w(
           fileutils
           safe_yaml
           date
           time
           behance
-        ])
+        ))
       end
 
       def self.specify_options(c)
-        c.option 'user', '--user NAME', 'The username of the account'
-        c.option 'api_token', '--api_token TOKEN', 'The API access token for the account'
+        c.option "user",      "--user NAME",       "The username of the account"
+        c.option "api_token", "--api_token TOKEN", "The API access token for the account"
       end
 
       def self.validate(options)
-        %w[user api_token].each do |option|
-          if options[option].nil?
-            abort "Missing mandatory option --#{option}."
-          end
+        %w(user api_token).each do |option|
+          abort "Missing mandatory option --#{option}." if options[option].nil?
         end
       end
 
@@ -31,31 +31,30 @@ module JekyllImport
       #
       # Returns nothing.
       def self.process(options)
-        user  = options.fetch('user')
-        token = options.fetch('api_token')
+        user  = options.fetch("user")
+        token = options.fetch("api_token")
 
         client = fetch_behance(token)
 
         user_projects = client.user_projects(user)
 
-        puts "#{user_projects.length} project(s) found. Importing now..."
+        Jekyll.logger.info "#{user_projects.length} project(s) found. Importing now..."
 
         user_projects.each do |project|
-
-          details = client.project(project['id'])
-          title   = project['name'].to_s
-          formatted_date = Time.at(project['published_on'].to_i).to_date.to_s
+          details = client.project(project["id"])
+          title   = project["name"].to_s
+          formatted_date = Time.at(project["published_on"].to_i).to_date.to_s
 
           post_name = title.split(%r{ |!|/|:|&|-|$|,}).map do |character|
             character.downcase unless character.empty?
-          end.compact.join('-')
+          end.compact.join("-")
 
           name = "#{formatted_date}-#{post_name}"
 
           header = {
-            "layout" => "post",
-            "title" => title,
-            "details" => details
+            "layout"  => "post",
+            "title"   => title,
+            "details" => details,
           }
 
           FileUtils.mkdir_p("_posts")
@@ -63,17 +62,19 @@ module JekyllImport
           File.open("_posts/#{name}.md", "w") do |f|
             f.puts header.to_yaml
             f.puts "---\n\n"
-            f.puts details['description'].to_s
+            f.puts details["description"].to_s
           end
         end
 
-        puts "Finished importing."
+        Jekyll.logger.info "Finished importing."
       end
 
-      private
+      class << self
+        private
 
-      def self.fetch_behance(token)
-        ::Behance::Client.new(access_token: token)
+        def fetch_behance(token)
+          ::Behance::Client.new(:access_token => token)
+        end
       end
     end
   end
